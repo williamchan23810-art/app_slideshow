@@ -28,86 +28,166 @@
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
     }
+    
+    /* Disabled outline styling for buttons when inactive, enforcing blue outline conformity */
+    .disabled-grey:disabled {
+      background-color: transparent !important;
+      border-color: #3b82f6 !important; /* blue-500 border */
+      cursor: not-allowed;
+    }
+
+    /* Force Neon Orange color and thickness on active sidebar controls */
+    #sidebar button.step-active:not(#btn-reset):not(.bg-amber-600):not(.bg-emerald-600), 
+    #sidebar select.step-active, 
+    #sidebar .step-active label,
+    #sidebar label.step-active {
+      color: #ff5f1f !important;
+      opacity: 1.0 !important;
+      font-weight: 600 !important;
+    }
+
+    /* Dimmed Neon Orange color for inactive sidebar controls, keeping fully bright blue borders */
+    #sidebar button.step-inactive:not(#btn-reset):not(.bg-amber-600):not(.bg-emerald-600), 
+    #sidebar select.step-inactive, 
+    #sidebar .step-inactive label,
+    #sidebar label.step-inactive {
+      color: rgba(255, 95, 31, 0.4) !important;
+      opacity: 1.0 !important; /* Keep element opacity 100% so border is fully bright! */
+      font-weight: 600 !important;
+    }
+
+    /* Dimmed SVG icons inside inactive steps */
+    #sidebar .step-inactive svg,
+    #sidebar button.step-inactive svg {
+      opacity: 0.4 !important;
+    }
+
+    /* Force Bright White color and thickness on the Name textarea input */
+    #location-name {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+    }
+
+    /* Target option dropdowns to stay readable with dark background and neon orange text */
+    #music-select option, #aspect-ratio-select option {
+      background-color: #18181b !important;
+      color: #ff5f1f !important;
+    }
+
+    /* Force brightness and color on disabled select elements to bypass browser dimming */
+    #sidebar select:disabled {
+      font-weight: 600 !important;
+      opacity: 1.0 !important;
+    }
+    #sidebar select:disabled.step-active {
+      color: #ff5f1f !important;
+      -webkit-text-fill-color: #ff5f1f !important;
+    }
+    #sidebar select:disabled.step-inactive {
+      color: rgba(255, 95, 31, 0.4) !important;
+      -webkit-text-fill-color: rgba(255, 95, 31, 0.4) !important;
+    }
+
+    /* Glow text effect for location name input value with Neon Orange text-shadow */
+    #location-name.glow-text {
+      text-shadow: 0 0 8px rgba(255, 95, 31, 0.95), 0 0 16px rgba(255, 95, 31, 0.65) !important;
+    }
+
+    /* Force text cursor shape on Step 1 container and label */
+    #step-1-container, #name-label {
+      cursor: text !important;
+    }
   </style>
 </head>
-<body class="bg-zinc-950 text-white font-sans h-screen w-screen overflow-hidden flex flex-col justify-between select-none">
+<body class="bg-zinc-950 text-white font-sans h-screen w-screen overflow-hidden flex flex-row select-none">
 
-  <!-- ================= CONTROL / IMPORT BAR ================= -->
-  <header id="control-panel" class="z-50 bg-zinc-900/90 backdrop-blur border-b border-zinc-800 p-4 transition-all duration-300">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <img src="logo.png" alt="Logo" class="w-[120px] h-[120px] rounded-full border-2 border-zinc-700 object-cover shadow-lg" />
+  <!-- LEFT SIDEBAR: Controls & Settings -->
+  <aside id="sidebar" class="w-80 bg-zinc-900 border-r border-zinc-800 p-6 flex flex-col justify-between z-50 shrink-0">
+    <!-- Top part: Title/Logo & Steps -->
+    <div class="flex flex-col gap-4 overflow-y-auto pr-1">
+      <div class="flex flex-col items-start gap-2.5">
+        <img src="logo.png" alt="Logo" class="w-32 h-32 rounded-full border border-zinc-700 object-cover shadow-md" />
         <div>
-          <h1 class="text-2xl font-bold tracking-wide text-zinc-100">App_SlideShow</h1>
-          <p class="text-xs text-zinc-400">Cinematic 4s intervals • 0.8s transitions • Auto-zoomed</p>
+          <h1 class="text-xl font-bold tracking-wide text-zinc-100">App_SlideShow</h1>
+          <p class="text-[10px] text-zinc-400">Explore • Learn • Discover</p>
         </div>
       </div>
       
-      <div class="flex flex-wrap items-center gap-3">
-        <!-- Place Input -->
-        <input 
-          type="text" 
-          id="location-name" 
-          placeholder="Place / Title" 
-          class="bg-zinc-800 border border-zinc-700 text-sm rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 w-44"
-        />
+      <!-- Unified 6-Step Container -->
+      <div class="flex flex-col gap-3 mt-2">
+        <!-- Step 1: Name (2 rows) -->
+        <div id="step-1-container" class="rounded border border-blue-500 bg-zinc-950/60 h-20 transition-all duration-300 relative">
+          <label id="name-label" class="absolute top-2.5 left-2.5 text-[11px] font-bold text-zinc-400 tracking-wider select-none pointer-events-none z-10">1. Name</label>
+          <textarea 
+            id="location-name" 
+            placeholder="" 
+            class="absolute inset-0 w-full h-full bg-transparent border-0 text-xs focus:outline-none text-white resize-none text-center p-2.5 pt-6 z-0"
+          ></textarea>
+        </div>
 
-        <!-- Simplified Music Box Selector -->
-        <select id="music-select" class="bg-zinc-800 border border-zinc-700 text-sm rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
-          <option value="none" selected>🎵 No Music</option>
-          <option value="custom">📂 Upload MP3...</option>
-        </select>
-        <input type="file" id="audio-loader" accept="audio/*" class="hidden" />
+        <!-- Step 2: Pictures -->
+        <button id="btn-pictures" disabled class="step-inactive text-sm font-semibold py-2.5 px-4 rounded transition-all w-full text-left bg-transparent border border-blue-500 disabled-grey shadow">
+          2. Pictures
+        </button>
+        <input type="file" id="image-loader" multiple accept="image/*" class="hidden" />
 
-        <!-- Aspect Ratio Selector -->
-        <select id="aspect-ratio-select" class="bg-zinc-800 border border-zinc-700 text-sm rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40">
-          <option value="landscape-4-3" selected>📷 Landscape (4:3)</option>
-          <option value="portrait-9-16">📱 Portrait (9:16)</option>
-        </select>
-        
-        <!-- File Input (Supports multiple file selection) -->
-        <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all shadow">
-          Choose Pictures
-          <input type="file" id="image-loader" multiple accept="image/*" class="hidden" />
-        </label>
-
-        <!-- Control Buttons (Always visible, disabled when empty) -->
-        <div id="playback-controls" class="flex items-center gap-2">
-          <button id="btn-play-pause" disabled class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            Start
-          </button>
-          <button id="btn-reset" disabled class="bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-            Reset
-          </button>
-          <button id="btn-save-video" disabled class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all flex items-center gap-1.5 shadow disabled:opacity-50 disabled:cursor-not-allowed">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Save as Video
-          </button>
+        <!-- Step 3: Music (Dropdown select) -->
+        <div id="step-3-container" class="flex flex-col justify-center p-2 rounded border border-blue-500 bg-zinc-950/60 text-left transition-all duration-300">
+          <select id="music-select" disabled class="w-full bg-transparent text-sm step-inactive focus:outline-none cursor-pointer">
+            <option value="none" selected>3. Music (No Music) 🎵</option>
+            <option value="custom">3. Music (Upload MP3...) 📂</option>
+          </select>
+          <input type="file" id="audio-loader" accept="audio/*" class="hidden" />
+          
           <!-- Loaded Music Status & Remove Button -->
-          <div id="music-status-container" class="hidden items-center gap-2 bg-zinc-800 border border-zinc-700 px-3 py-1.5 rounded text-xs select-none">
-            <span id="music-status-text" class="text-emerald-400 font-semibold max-w-[150px] truncate"></span>
-            <button type="button" id="btn-remove-music" class="text-zinc-500 hover:text-red-400 font-bold text-sm leading-none focus:outline-none" title="Remove Music">×</button>
+          <div id="music-status-container" class="hidden items-center justify-between bg-zinc-900 border border-zinc-800 px-2 py-1 mt-1.5 rounded text-xs select-none">
+            <span id="music-status-text" class="text-emerald-400 font-semibold truncate max-w-[180px]"></span>
+            <button type="button" id="btn-remove-music" class="text-zinc-500 hover:text-red-400 font-bold text-sm leading-none focus:outline-none">×</button>
           </div>
         </div>
+
+        <!-- Step 4: Aspect Ratio / Mode -->
+        <div id="step-4-container" class="flex flex-col justify-center p-2 rounded border border-blue-500 bg-zinc-950/60 text-left transition-all duration-300">
+          <select id="aspect-ratio-select" disabled class="w-full bg-transparent text-sm step-inactive focus:outline-none cursor-pointer">
+            <option value="landscape-4-3" selected>4. Landscape Mode (4:3) 📷</option>
+            <option value="portrait-9-16">4. Portrait Mode (9:16) 📱</option>
+          </select>
+        </div>
+
+        <!-- Step 5: Start / Pause -->
+        <button id="btn-play-pause" disabled class="step-inactive text-sm font-semibold py-2.5 px-4 rounded transition-all w-full text-left bg-transparent border border-blue-500 disabled-grey shadow">
+          5. Start
+        </button>
+
+        <!-- Step 6: Download Video -->
+        <button id="btn-save-video" disabled class="step-inactive text-sm font-semibold py-2.5 px-4 rounded transition-all flex items-center justify-between shadow w-full bg-transparent border border-blue-500 disabled-grey">
+          <span>6. Download MP4</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </button>
       </div>
     </div>
-  </header>
 
-  <!-- ================= SLIDESHOW VIEWPORT ================= -->
-  <main class="relative flex-grow w-full h-full bg-black overflow-hidden flex items-center justify-center">
+    <!-- Bottom part: Separate container with Row of 2 buttons: Back and Reset -->
+    <div class="flex flex-col gap-3 mt-auto pt-4 border-t border-zinc-800 shrink-0">
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btn-back" class="text-white text-sm font-semibold py-2.5 px-4 rounded transition-all shadow text-center bg-transparent border border-blue-500 hover:bg-blue-500/10">
+          Back
+        </button>
+        <button id="btn-reset" disabled class="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold py-2.5 px-4 rounded transition-all shadow text-center disabled:opacity-50 disabled:cursor-not-allowed">
+          Reset
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT AREA: Viewport -->
+  <main class="relative flex-grow h-screen bg-black overflow-hidden flex items-center justify-center">
     
     <!-- Empty State / Custom Welcome Screen -->
     <div id="empty-state" class="absolute inset-0 z-20 bg-zinc-950 flex items-center justify-center overflow-hidden">
       <img src="welcome.jpg" alt="Welcome to William H. Chan Slide Show Studio" class="w-full h-full object-cover opacity-90 transition-all duration-500" />
-      <!-- Semi-transparent overlay with start tips to keep it usable -->
-      <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-end pb-12 md:pb-24 p-6 text-center">
-        <div class="bg-zinc-950/80 backdrop-blur border border-zinc-800 p-6 rounded-2xl max-w-md shadow-2xl">
-          <h2 class="text-xl font-bold mb-2 text-white tracking-wide">Create your Slide-Show Video.</h2>
-          <p class="text-sm text-zinc-300 leading-relaxed">1. Give it a Name; 2. Upload Background Music; 3. Select Photos; 4. Press Start.</p>
-        </div>
-      </div>
     </div>
 
     <!-- Active Slides Canvas -->
@@ -160,12 +240,12 @@
     const canvas = document.getElementById('slideshow-canvas');
     const ctx = canvas.getContext('2d');
     const emptyState = document.getElementById('empty-state');
-    const playbackControls = document.getElementById('playback-controls');
     const btnPlayPause = document.getElementById('btn-play-pause');
     const btnReset = document.getElementById('btn-reset');
     const btnSaveVideo = document.getElementById('btn-save-video');
-    const controlPanel = document.getElementById('control-panel');
     const aspectRatioSelect = document.getElementById('aspect-ratio-select');
+    const btnPictures = document.getElementById('btn-pictures');
+    const btnBack = document.getElementById('btn-back');
 
     // Modal elements
     const progressModal = document.getElementById('progress-modal');
@@ -238,13 +318,80 @@
     const END_SLIDE_DURATION = 4000; // 4 seconds showing the logo
 
     // Initialize button states as disabled
-    updateButtonStates();
+    updateStepValidation();
 
     // Event Handlers
     imageLoader.addEventListener('change', handleImageSelection);
     audioLoader.addEventListener('change', handleCustomAudioUpload);
     musicSelect.addEventListener('change', handleMusicSelection);
     btnRemoveMusic.addEventListener('click', removeMusic);
+
+    // Wire up Pictures button
+    btnPictures.addEventListener('click', () => {
+      imageLoader.click();
+    });
+
+    // Wire up text input for location name and manage label visibility
+    const nameLabel = document.getElementById('name-label');
+    
+    function updateNameLabelVisibility() {
+      const isFocused = document.activeElement === locationInput;
+      const hasValue = locationInput.value.trim().length > 0;
+      
+      if (isFocused || hasValue) {
+        nameLabel.classList.add('hidden');
+      } else {
+        nameLabel.classList.remove('hidden');
+      }
+
+      if (hasValue) {
+        locationInput.classList.add('glow-text');
+      } else {
+        locationInput.classList.remove('glow-text');
+      }
+    }
+
+    locationInput.addEventListener('focus', updateNameLabelVisibility);
+    locationInput.addEventListener('blur', () => {
+      updateNameLabelVisibility();
+      if (locationInput.value.trim().length > 0 && loadedImages.length === 0) {
+        btnPictures.focus();
+      }
+    });
+    locationInput.addEventListener('input', () => {
+      updateNameLabelVisibility();
+      updateStepValidation();
+    });
+    locationInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        // If they press Enter and it's already a multi-line input, finish typing and blur to focus Step 2!
+        if (locationInput.value.includes('\n')) {
+          e.preventDefault();
+          locationInput.blur();
+        }
+      }
+    });
+    
+    // Set initial label state
+    updateNameLabelVisibility();
+
+    // Wire up Back button
+    btnBack.addEventListener('click', () => {
+      const nameValue = locationInput.value.trim();
+      const hasImages = loadedImages.length > 0;
+      
+      if (hasImages && isMusicLoaded && musicSelect.value === 'custom') {
+        audioLoader.click();
+      } else if (hasImages) {
+        imageLoader.click();
+      } else if (nameValue.length > 0) {
+        locationInput.focus();
+        const len = locationInput.value.length;
+        locationInput.setSelectionRange(len, len);
+      } else {
+        window.history.back();
+      }
+    });
 
     // Initialize Web Audio context on user gesture to bypass browser block
     function initAudioContext() {
@@ -385,7 +532,7 @@
 
     function onImagesPreloaded() {
       emptyState.classList.add('hidden');
-      updateButtonStates();
+      updateStepValidation();
       
       // Draw initial slide frame
       drawFrame(0);
@@ -402,7 +549,7 @@
     });
 
     // Reset control
-    btnReset.addEventListener('click', resetSlideshow);
+    btnReset.addEventListener('click', () => resetSlideshow(true));
 
     // Save as Video control
     btnSaveVideo.addEventListener('click', () => {
@@ -410,8 +557,7 @@
 
       if (recordedVideoUrl) {
         // Instant download of the pre-recorded video blob
-        const recordedMime = mediaRecorder ? mediaRecorder.mimeType : 'video/webm';
-        const ext = recordedMime.includes('mp4') ? 'mp4' : 'webm';
+        const ext = 'mp4';
         
         const a = document.createElement('a');
         a.href = recordedVideoUrl;
@@ -458,25 +604,27 @@
         
         // Restore Save button back to blue state
         btnSaveVideo.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <span>6. Download MP4</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          Save as Video
         `;
-        btnSaveVideo.className = "bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all flex items-center gap-1.5 shadow disabled:opacity-50 disabled:cursor-not-allowed";
+        btnSaveVideo.className = "text-white text-sm font-semibold py-2.5 px-4 rounded transition-all flex items-center justify-between shadow w-full bg-transparent border border-blue-500 disabled-grey";
 
-        // Determine the best video mimeType supported by the user's browser
-        let mimeType = 'video/webm;codecs=vp9';
-        if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+        // Determine the best video mimeType supported by the user's browser (prefer MP4)
+        let mimeType = 'video/mp4;codecs=h264';
+        if (MediaRecorder.isTypeSupported('video/mp4;codecs=h264')) {
+          mimeType = 'video/mp4;codecs=h264';
+        } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+          mimeType = 'video/mp4;codecs=avc1';
+        } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+          mimeType = 'video/mp4';
+        } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
           mimeType = 'video/webm;codecs=vp9';
         } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
           mimeType = 'video/webm;codecs=vp8';
         } else if (MediaRecorder.isTypeSupported('video/webm')) {
           mimeType = 'video/webm';
-        } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=h264')) {
-          mimeType = 'video/mp4;codecs=h264';
-        } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-          mimeType = 'video/mp4';
         }
 
         const canvasStream = canvas.captureStream(30); // Capture canvas at 30 FPS
@@ -506,19 +654,19 @@
 
         mediaRecorder.onstop = () => {
           const recordedMime = mediaRecorder.mimeType || mimeType;
-          const ext = recordedMime.includes('mp4') ? 'mp4' : 'webm';
+          const ext = 'mp4';
           
           recordedVideoBlob = new Blob(recordedChunks, { type: recordedMime });
           recordedVideoUrl = URL.createObjectURL(recordedVideoBlob);
           
           // Enable direct instant download on Save as Video button
           btnSaveVideo.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span>6. Download MP4</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Download Video
           `;
-          btnSaveVideo.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all flex items-center gap-1.5 shadow";
+          btnSaveVideo.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-2.5 px-4 rounded transition-all flex items-center justify-between shadow w-full";
 
           if (isSavingRequested) {
             // Trigger instant download
@@ -548,16 +696,30 @@
       
       isPlaying = true;
       lastTimestamp = 0;
-      btnPlayPause.innerText = 'Pause';
-      btnPlayPause.classList.replace('bg-emerald-600', 'bg-amber-600');
-      btnPlayPause.classList.replace('hover:bg-emerald-500', 'hover:bg-amber-500');
+      btnPlayPause.innerText = '5. Pause';
+      btnPlayPause.className = "text-white text-sm font-semibold py-2.5 px-4 rounded transition-all w-full text-left bg-amber-600 hover:bg-amber-500 shadow";
 
       // Disable inputs during active slideshow play/export
       aspectRatioSelect.disabled = true;
       musicSelect.disabled = true;
       locationInput.disabled = true;
-      imageLoader.disabled = true;
-      imageLoader.parentElement.classList.add('opacity-50', 'pointer-events-none');
+      btnPictures.disabled = true;
+      btnBack.disabled = true;
+      btnBack.classList.add('opacity-50', 'pointer-events-none');
+      btnReset.disabled = true;
+
+      // Mute other steps and highlight active Step 5 (Pause)
+      const step1 = document.getElementById('step-1-container');
+      const step2 = btnPictures;
+      const step3 = document.getElementById('step-3-container');
+      const step4 = document.getElementById('step-4-container');
+      const step6 = btnSaveVideo;
+      [step1, step2, step3, step4, step6].forEach(step => {
+        step.classList.remove('opacity-100', 'opacity-70');
+        step.classList.add('opacity-40');
+      });
+      btnPlayPause.classList.remove('opacity-40');
+      btnPlayPause.classList.add('opacity-100');
 
       if (isMusicLoaded) {
         bgAudio.play().catch(e => console.warn("Audio play blocked by browser:", e));
@@ -570,16 +732,14 @@
 
     function pauseSlideshow() {
       isPlaying = false;
-      btnPlayPause.innerText = 'Play';
-      btnPlayPause.classList.replace('bg-amber-600', 'bg-emerald-600');
-      btnPlayPause.classList.replace('hover:bg-amber-500', 'hover:bg-emerald-500');
+      btnPlayPause.innerText = '5. Start';
+      btnPlayPause.className = "text-white text-sm font-semibold py-2.5 px-4 rounded transition-all w-full text-left bg-transparent border border-blue-500 hover:bg-blue-500/10 disabled-grey shadow";
       
       // Re-enable inputs
-      aspectRatioSelect.disabled = false;
-      musicSelect.disabled = false;
-      locationInput.disabled = false;
-      imageLoader.disabled = false;
-      imageLoader.parentElement.classList.remove('opacity-50', 'pointer-events-none');
+      btnBack.disabled = false;
+      btnBack.classList.remove('opacity-50', 'pointer-events-none');
+      
+      updateStepValidation();
 
       if (isMusicLoaded) {
         bgAudio.pause();
@@ -595,13 +755,16 @@
       }
     }
 
-    function resetSlideshow() {
+    function resetSlideshow(clearName = false) {
       pauseSlideshow();
       slideshowTime = 0;
       lastTimestamp = 0;
 
       // Clear text inputs and selectors
-      locationInput.value = "";
+      if (clearName === true) {
+        locationInput.value = "";
+      }
+      locationInput.disabled = false;
       imageLoader.value = "";
       audioLoader.value = "";
 
@@ -627,20 +790,28 @@
       }
       isSavingRequested = false;
 
+      // Hide progress modal
+      progressModal.classList.add('hidden');
+      progressModal.classList.remove('flex');
+
       // Restore Save button back to blue state
       btnSaveVideo.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span>6. Download MP4</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg>
-        Save as Video
       `;
-      btnSaveVideo.className = "bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all flex items-center gap-1.5 shadow disabled:opacity-50 disabled:cursor-not-allowed";
+      btnSaveVideo.className = "text-white text-sm font-semibold py-2.5 px-4 rounded transition-all flex items-center justify-between shadow w-full bg-transparent border border-blue-500 disabled-grey";
 
       // Reset play/pause button state back to original "Start"
-      btnPlayPause.innerText = 'Start';
-      btnPlayPause.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold py-1.5 px-4 rounded transition-all disabled:opacity-50 disabled:cursor-not-allowed";
+      btnPlayPause.innerText = '5. Start';
+      btnPlayPause.className = "text-white text-sm font-semibold py-2.5 px-4 rounded transition-all w-full text-left bg-transparent border border-blue-500 disabled-grey shadow";
 
-      // Restore welcome screen
+      // Re-enable back button
+      btnBack.disabled = false;
+      btnBack.classList.remove('opacity-50', 'pointer-events-none');
+
+      // Restore welcome screen with original HTML image content
       emptyState.innerHTML = originalEmptyStateHTML;
       emptyState.classList.remove('hidden');
 
@@ -648,7 +819,8 @@
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
 
-      updateButtonStates();
+      updateNameLabelVisibility();
+      updateStepValidation();
 
       if (bgAudio) {
         bgAudio.pause();
@@ -657,16 +829,84 @@
       }
     }
 
-    function updateButtonStates() {
+    function updateStepValidation() {
+      const nameValue = locationInput.value.trim();
+      const hasName = nameValue.length > 0;
       const hasImages = loadedImages.length > 0;
-      if (hasImages) {
-        btnPlayPause.removeAttribute('disabled');
-        btnReset.removeAttribute('disabled');
-        btnSaveVideo.removeAttribute('disabled');
+
+      // Select container and button elements
+      const step1 = document.getElementById('step-1-container');
+      const step2 = btnPictures;
+      const step3 = document.getElementById('step-3-container');
+      const step4 = document.getElementById('step-4-container');
+      const step5 = btnPlayPause;
+      const step6 = btnSaveVideo;
+
+      // Ensure all container outlines are ALWAYS 100% bright blue
+      const allContainers = [step1, step2, step3, step4, step5, step6];
+      allContainers.forEach(container => {
+        container.classList.remove('border-blue-500/40', 'border-zinc-700');
+        container.classList.add('border-blue-500');
+      });
+
+      // Reset active/inactive typography classes for all non-Name steps
+      const contentElements = [step2, musicSelect, aspectRatioSelect, step5, step6];
+      contentElements.forEach(el => {
+        el.classList.remove('step-active');
+        el.classList.add('step-inactive');
+      });
+
+      // Enable/Disable native attributes based on sequence
+      if (hasName) {
+        step2.removeAttribute('disabled');
       } else {
-        btnPlayPause.setAttribute('disabled', 'true');
+        step2.setAttribute('disabled', 'true');
+      }
+
+      if (hasImages) {
+        musicSelect.removeAttribute('disabled');
+        aspectRatioSelect.removeAttribute('disabled');
+      } else {
+        musicSelect.setAttribute('disabled', 'true');
+        aspectRatioSelect.setAttribute('disabled', 'true');
+      }
+
+      if (hasName && hasImages) {
+        step5.removeAttribute('disabled');
+      } else {
+        step5.setAttribute('disabled', 'true');
+      }
+
+      if (hasName && hasImages) {
+        step6.removeAttribute('disabled');
+      } else {
+        step6.setAttribute('disabled', 'true');
+      }
+
+      // Manage typography active states
+      if (!hasName) {
+        // Step 1 Name is the active step
+      } else if (!hasImages) {
+        // Step 2 Pictures is active
+        step2.classList.remove('step-inactive');
+        step2.classList.add('step-active');
+      } else {
+        // Step 5 Start is active
+        step5.classList.remove('step-inactive');
+        step5.classList.add('step-active');
+        
+        // Music & Mode are active
+        musicSelect.classList.remove('step-inactive');
+        musicSelect.classList.add('step-active');
+        aspectRatioSelect.classList.remove('step-inactive');
+        aspectRatioSelect.classList.add('step-active');
+      }
+
+      // Reset Button (Red background, active if we have name or pictures)
+      if (hasName || hasImages) {
+        btnReset.removeAttribute('disabled');
+      } else {
         btnReset.setAttribute('disabled', 'true');
-        btnSaveVideo.setAttribute('disabled', 'true');
       }
     }
 
@@ -898,18 +1138,25 @@
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 4;
 
-          // Header Text
+          // Header Text (Supports multi-line text split by newlines)
           const titleFontSize = Math.floor(V_WIDTH * 0.05); // 72px for 1440 width
           ctx.fillStyle = '#ffffff';
           ctx.font = `bold ${titleFontSize}px sans-serif`;
           if ('letterSpacing' in ctx) {
             ctx.letterSpacing = `${Math.floor(titleFontSize * 0.11)}px`; // 8px for 72px font
           }
-          ctx.fillText(locationName.toUpperCase(), V_WIDTH / 2, V_HEIGHT / 2);
+          
+          const lines = locationName.split('\n').map(line => line.trim());
+          const lineHeight = titleFontSize * 1.25;
+          const startY = V_HEIGHT / 2 - ((lines.length - 1) * lineHeight) / 2;
+          
+          lines.forEach((lineText, lineIdx) => {
+            ctx.fillText(lineText.toUpperCase(), V_WIDTH / 2, startY + lineIdx * lineHeight);
+          });
 
-          // White underline divider
+          // White underline divider (placed below the last line)
           const dividerWidth = Math.floor(V_WIDTH * 0.055); // 80px for 1440 width
-          const dividerOffset = Math.floor(titleFontSize * 0.7); // 50px for 72px font
+          const dividerOffset = Math.floor(titleFontSize * 0.7) + ((lines.length - 1) * lineHeight) / 2;
           const dividerThickness = Math.max(2, Math.floor(titleFontSize * 0.05)); // 4px for 72px font
 
           ctx.shadowColor = 'transparent';
