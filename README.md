@@ -50,14 +50,16 @@ App_SlideShow/
 ├── index.html        # Main single-page application entry point
 ├── README.md         # Project documentation and guide
 ├── og-image.jpg      # Open Graph image / cover preview
-└── logo.png          # Branded logo for ending screen
+├── endscreen.jpg     # Branded artwork for ending screen
+└── logo.png          # App icon for sidebar UI
 ```
 
 ---
 
 ## 📸 Personalization
 
-* **Ending Logo**: You can swap out `logo.png` with any custom circular logo to personalize the end slide.
+* **Ending Screen**: You can swap out `endscreen.jpg` with any custom artwork or logo to personalize the end slide.
+* **UI Icon**: `logo.png` sets the studio icon displayed in the application sidebar.
 * **OG Cover**: Swap `og-image.jpg` with a preview screenshot of your own travels to display on link sharing platforms.
 
 ---

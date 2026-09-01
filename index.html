@@ -301,14 +301,14 @@
     // State Variables
     let imagesList = [];     // Array of Object URLs
     let loadedImages = [];   // Array of Image elements
-    let logoImage = new Image();
-    let logoLoaded = false;
+    let endScreenImage = new Image();
+    let endScreenLoaded = false;
     const originalEmptyStateHTML = emptyState.innerHTML;
 
-    // Preload travel logo
-    logoImage.onload = () => { logoLoaded = true; };
-    logoImage.onerror = () => { logoLoaded = false; };
-    logoImage.src = 'logo.png';
+    // Preload end screen artwork
+    endScreenImage.onload = () => { endScreenLoaded = true; };
+    endScreenImage.onerror = () => { endScreenLoaded = false; };
+    endScreenImage.src = 'endscreen.jpg';
 
     // Background Audio Variables (Supports up to 2 tracks with continuous looping)
     let musicTracks = []; // Array of { file: File, url: string, name: string }
@@ -651,7 +651,7 @@
       `;
       emptyState.classList.remove('hidden');
 
-      // Preload images into memory (and check if logo is preloaded too)
+      // Preload images into memory (and check if end screen artwork is preloaded too)
       let loadedCount = 0;
       let totalToLoad = urls.length;
 
@@ -662,14 +662,14 @@
         }
       };
 
-      if (!logoImage.complete) {
+      if (!endScreenImage.complete) {
         totalToLoad++;
-        logoImage.onload = () => {
-          logoLoaded = true;
+        endScreenImage.onload = () => {
+          endScreenLoaded = true;
           checkAllLoaded();
         };
-        logoImage.onerror = () => {
-          logoLoaded = false;
+        endScreenImage.onerror = () => {
+          endScreenLoaded = false;
           checkAllLoaded();
         };
       }
@@ -1176,36 +1176,67 @@
           }
         }
 
-        // Draw logo contents
+        // Draw end screen contents
         ctx.save();
         ctx.globalAlpha = alpha;
 
-        // Subtle pulsing zoom for logo
-        const pulseScale = 1.0 + 0.03 * Math.sin(endElapsed * 0.002);
-        const baseRadius = Math.floor(V_WIDTH * 0.083); // 120px for 1440 width
-        const radius = baseRadius * pulseScale;
-        const hasLogo = logoImage.complete && logoImage.naturalWidth > 0;
-        const logoY = V_HEIGHT / 2 - Math.floor(V_HEIGHT * 0.074); // -80px for 1080 height
+        const hasEndScreen = endScreenImage.complete && endScreenImage.naturalWidth > 0;
 
-        if (hasLogo) {
+        if (hasEndScreen) {
+          // Subtle pulsing zoom for end screen artwork
+          const pulseScale = 1.0 + 0.02 * Math.sin(endElapsed * 0.002);
+          const imgW = endScreenImage.naturalWidth;
+          const imgH = endScreenImage.naturalHeight;
+          const imgAspect = imgW / imgH;
+
+          // Fit comfortably within canvas bounds
+          const maxW = V_WIDTH * 0.86;
+          const maxH = V_HEIGHT * 0.86;
+
+          let targetW, targetH;
+          if (maxW / maxH > imgAspect) {
+            targetH = maxH;
+            targetW = targetH * imgAspect;
+          } else {
+            targetW = maxW;
+            targetH = targetW / imgAspect;
+          }
+
+          const drawW = targetW * pulseScale;
+          const drawH = targetH * pulseScale;
+          const drawX = (V_WIDTH - drawW) / 2;
+          const drawY = (V_HEIGHT - drawH) / 2;
+          const cornerRadius = Math.floor(16 * (V_WIDTH / 1440));
+
+          // Soft drop shadow
           ctx.save();
-          // Draw circular clip path
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+          ctx.shadowBlur = Math.floor(30 * (V_WIDTH / 1440));
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = Math.floor(8 * (V_HEIGHT / 1080));
+
+          // Rounded card clip
           ctx.beginPath();
-          ctx.arc(V_WIDTH / 2, logoY, radius, 0, Math.PI * 2);
+          ctx.roundRect(drawX, drawY, drawW, drawH, cornerRadius);
           ctx.clip();
 
-          // Draw logo image inside circle
-          ctx.drawImage(logoImage, V_WIDTH / 2 - radius, logoY - radius, radius * 2, radius * 2);
+          // Draw end screen image
+          ctx.drawImage(endScreenImage, drawX, drawY, drawW, drawH);
           ctx.restore();
 
-          // Outer circle border
-          ctx.strokeStyle = 'rgba(63, 63, 70, 0.6)'; // zinc-700
-          ctx.lineWidth = 4;
+          // Elegant subtle border outline
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+          ctx.lineWidth = Math.max(1, Math.floor(2 * (V_WIDTH / 1440)));
           ctx.beginPath();
-          ctx.arc(V_WIDTH / 2, logoY, radius, 0, Math.PI * 2);
+          ctx.roundRect(drawX, drawY, drawW, drawH, cornerRadius);
           ctx.stroke();
         } else {
           // Draw a beautiful fallback styled icon (pulsing circular badge with W)
+          const pulseScale = 1.0 + 0.03 * Math.sin(endElapsed * 0.002);
+          const baseRadius = Math.floor(V_WIDTH * 0.083); // 120px for 1440 width
+          const radius = baseRadius * pulseScale;
+          const logoY = V_HEIGHT / 2 - Math.floor(V_HEIGHT * 0.074); // -80px for 1080 height
+
           ctx.beginPath();
           ctx.arc(V_WIDTH / 2, logoY, radius, 0, Math.PI * 2);
           ctx.fillStyle = 'rgba(30, 58, 138, 0.3)'; // blue-900/30
@@ -1220,25 +1251,25 @@
           ctx.fillStyle = '#60a5fa'; // blue-400
           ctx.font = `bold ${Math.floor(80 * (V_WIDTH / 1440) * pulseScale)}px sans-serif`;
           ctx.fillText('W', V_WIDTH / 2, logoY);
+
+          // Draw ending texts for fallback
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetY = 2;
+
+          const endTitleFontSize = Math.floor(V_WIDTH * 0.025); // 36px for 1440 width
+          const endSubFontSize = Math.floor(V_WIDTH * 0.014); // 20px for 1440 width
+
+          ctx.fillStyle = '#f4f4f5'; // zinc-100
+          ctx.font = `bold ${endTitleFontSize}px sans-serif`;
+          ctx.fillText('William H. Chan Studio', V_WIDTH / 2, V_HEIGHT / 2 + Math.floor(V_HEIGHT * 0.092));
+
+          ctx.fillStyle = '#a1a1aa'; // zinc-400
+          ctx.font = `${endSubFontSize}px sans-serif`;
+          ctx.fillText('Explore. Learn. Discover.', V_WIDTH / 2, V_HEIGHT / 2 + Math.floor(V_HEIGHT * 0.148));
         }
-
-        // Draw ending texts
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 2;
-
-        const endTitleFontSize = Math.floor(V_WIDTH * 0.025); // 36px for 1440 width
-        const endSubFontSize = Math.floor(V_WIDTH * 0.014); // 20px for 1440 width
-
-        ctx.fillStyle = '#f4f4f5'; // zinc-100
-        ctx.font = `bold ${endTitleFontSize}px sans-serif`;
-        ctx.fillText('William H. Chan Studio', V_WIDTH / 2, V_HEIGHT / 2 + Math.floor(V_HEIGHT * 0.092));
-
-        ctx.fillStyle = '#a1a1aa'; // zinc-400
-        ctx.font = `${endSubFontSize}px sans-serif`;
-        ctx.fillText('Explore. Learn. Discover.', V_WIDTH / 2, V_HEIGHT / 2 + Math.floor(V_HEIGHT * 0.148));
 
         ctx.restore();
       } else {
