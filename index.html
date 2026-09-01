@@ -115,13 +115,13 @@
       
       <!-- Unified 6-Step Container -->
       <div class="flex flex-col gap-3 mt-2">
-        <!-- Step 1: Name (2 rows) -->
-        <div id="step-1-container" class="rounded border border-blue-500 bg-zinc-950/60 h-20 transition-all duration-300 relative">
+        <!-- Step 1: Name (3 rows) -->
+        <div id="step-1-container" class="rounded border border-blue-500 bg-zinc-950/60 h-24 transition-all duration-300 relative">
           <label id="name-label" class="absolute top-2.5 left-2.5 text-[11px] font-bold text-zinc-400 tracking-wider select-none pointer-events-none z-10">1. Name</label>
           <textarea 
             id="location-name" 
             placeholder="" 
-            class="absolute inset-0 w-full h-full bg-transparent border-0 text-xs focus:outline-none text-white resize-none text-center p-2.5 pt-6 z-0"
+            class="absolute inset-0 w-full h-full bg-transparent border-0 text-xs focus:outline-none text-white resize-none text-center p-2.5 pt-5 z-0"
           ></textarea>
         </div>
 
@@ -131,18 +131,32 @@
         </button>
         <input type="file" id="image-loader" multiple accept="image/*" class="hidden" />
 
-        <!-- Step 3: Music (Dropdown select) -->
+        <!-- Step 3: Music (Dropdown select + Track slots) -->
         <div id="step-3-container" class="flex flex-col justify-center p-2 rounded border border-blue-500 bg-zinc-950/60 text-left transition-all duration-300">
           <select id="music-select" disabled class="w-full bg-transparent text-sm step-inactive focus:outline-none cursor-pointer">
             <option value="none" selected>3. Music (No Music) 🎵</option>
-            <option value="custom">3. Music (Upload MP3...) 📂</option>
+            <option value="upload">3. Music (Upload MP3...) 📂</option>
           </select>
-          <input type="file" id="audio-loader" accept="audio/*" class="hidden" />
+          <input type="file" id="audio-loader" multiple accept="audio/*" class="hidden" />
           
-          <!-- Loaded Music Status & Remove Button -->
-          <div id="music-status-container" class="hidden items-center justify-between bg-zinc-900 border border-zinc-800 px-2 py-1 mt-1.5 rounded text-xs select-none">
-            <span id="music-status-text" class="text-emerald-400 font-semibold truncate max-w-[180px]"></span>
-            <button type="button" id="btn-remove-music" class="text-zinc-500 hover:text-red-400 font-bold text-sm leading-none focus:outline-none">×</button>
+          <!-- Loaded Music Status & Remove Buttons -->
+          <div id="music-status-container" class="hidden flex-col gap-1 mt-1.5 select-none">
+            <!-- Track 1 Item -->
+            <div id="track-1-item" class="hidden items-center justify-between bg-zinc-900 border border-zinc-800 px-2 py-1 rounded text-xs">
+              <div class="flex items-center gap-1.5 truncate max-w-[190px]">
+                <span class="text-zinc-400 font-mono text-[10px] shrink-0">1.</span>
+                <span id="track-1-name" class="text-emerald-400 font-semibold truncate"></span>
+              </div>
+              <button type="button" id="btn-remove-track-1" title="Remove Track 1" class="text-zinc-500 hover:text-red-400 font-bold text-sm leading-none focus:outline-none ml-1 shrink-0">×</button>
+            </div>
+            <!-- Track 2 Item -->
+            <div id="track-2-item" class="hidden items-center justify-between bg-zinc-900 border border-zinc-800 px-2 py-1 rounded text-xs">
+              <div class="flex items-center gap-1.5 truncate max-w-[190px]">
+                <span class="text-zinc-400 font-mono text-[10px] shrink-0">2.</span>
+                <span id="track-2-name" class="text-emerald-400 font-semibold truncate"></span>
+              </div>
+              <button type="button" id="btn-remove-track-2" title="Remove Track 2" class="text-zinc-500 hover:text-red-400 font-bold text-sm leading-none focus:outline-none ml-1 shrink-0">×</button>
+            </div>
           </div>
         </div>
 
@@ -235,8 +249,12 @@
     const audioLoader = document.getElementById('audio-loader');
     const musicSelect = document.getElementById('music-select');
     const musicStatusContainer = document.getElementById('music-status-container');
-    const musicStatusText = document.getElementById('music-status-text');
-    const btnRemoveMusic = document.getElementById('btn-remove-music');
+    const track1Item = document.getElementById('track-1-item');
+    const track2Item = document.getElementById('track-2-item');
+    const track1Name = document.getElementById('track-1-name');
+    const track2Name = document.getElementById('track-2-name');
+    const btnRemoveTrack1 = document.getElementById('btn-remove-track-1');
+    const btnRemoveTrack2 = document.getElementById('btn-remove-track-2');
     const canvas = document.getElementById('slideshow-canvas');
     const ctx = canvas.getContext('2d');
     const emptyState = document.getElementById('empty-state');
@@ -292,14 +310,43 @@
     logoImage.onerror = () => { logoLoaded = false; };
     logoImage.src = 'logo.png';
 
-    // Background Audio Variables
-    let bgAudio = new Audio();
-    bgAudio.crossOrigin = "anonymous";
-    bgAudio.loop = true;
+    // Background Audio Variables (Supports up to 2 tracks with continuous looping)
+    let musicTracks = []; // Array of { file: File, url: string, name: string }
+    let isAddingSecondTrack = false;
+    let currentTrackIndex = 0; // 0 for Track 1, 1 for Track 2
+
+    const bgAudio1 = new Audio();
+    const bgAudio2 = new Audio();
+    bgAudio1.crossOrigin = "anonymous";
+    bgAudio2.crossOrigin = "anonymous";
+
     let bgAudioCtx = null;
-    let bgAudioSource = null;
+    let bgAudioSource1 = null;
+    let bgAudioSource2 = null;
     let bgAudioDest = null;
-    let isMusicLoaded = false;
+    let masterGainNode = null;
+
+    // Continuous looping logic: Track 1 -> Track 2 -> Track 1 -> Track 2...
+    bgAudio1.onended = () => {
+      if (!isPlaying) return;
+      if (musicTracks.length === 1) {
+        bgAudio1.currentTime = 0;
+        bgAudio1.play().catch(e => console.warn("Audio 1 loop error:", e));
+      } else if (musicTracks.length === 2) {
+        currentTrackIndex = 1;
+        bgAudio2.currentTime = 0;
+        bgAudio2.play().catch(e => console.warn("Audio 2 switch error:", e));
+      }
+    };
+
+    bgAudio2.onended = () => {
+      if (!isPlaying) return;
+      if (musicTracks.length === 2) {
+        currentTrackIndex = 0;
+        bgAudio1.currentTime = 0;
+        bgAudio1.play().catch(e => console.warn("Audio 1 switch error:", e));
+      }
+    };
 
     let slideshowTime = 0;   // Current elapsed time in milliseconds
     let lastTimestamp = 0;   // Timestamp of last frame
@@ -324,14 +371,15 @@
     imageLoader.addEventListener('change', handleImageSelection);
     audioLoader.addEventListener('change', handleCustomAudioUpload);
     musicSelect.addEventListener('change', handleMusicSelection);
-    btnRemoveMusic.addEventListener('click', removeMusic);
+    btnRemoveTrack1.addEventListener('click', () => removeSingleTrack(0));
+    btnRemoveTrack2.addEventListener('click', () => removeSingleTrack(1));
 
     // Wire up Pictures button
     btnPictures.addEventListener('click', () => {
       imageLoader.click();
     });
 
-    // Wire up text input for location name and manage label visibility
+    // Wire up text input for location name (3 rows max) and manage label visibility
     const nameLabel = document.getElementById('name-label');
     
     function updateNameLabelVisibility() {
@@ -359,13 +407,18 @@
       }
     });
     locationInput.addEventListener('input', () => {
+      const lines = locationInput.value.split('\n');
+      if (lines.length > 3) {
+        locationInput.value = lines.slice(0, 3).join('\n');
+      }
       updateNameLabelVisibility();
       updateStepValidation();
     });
     locationInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        // If they press Enter and it's already a multi-line input, finish typing and blur to focus Step 2!
-        if (locationInput.value.includes('\n')) {
+        const lines = locationInput.value.split('\n');
+        // When user is on the 3rd line (2 newlines already exist), finish input and focus Step 2!
+        if (lines.length >= 3) {
           e.preventDefault();
           locationInput.blur();
         }
@@ -380,7 +433,8 @@
       const nameValue = locationInput.value.trim();
       const hasImages = loadedImages.length > 0;
       
-      if (hasImages && isMusicLoaded && musicSelect.value === 'custom') {
+      if (hasImages && musicTracks.length > 0) {
+        isAddingSecondTrack = false;
         audioLoader.click();
       } else if (hasImages) {
         imageLoader.click();
@@ -395,26 +449,27 @@
 
     // Initialize Web Audio context on user gesture to bypass browser block
     function initAudioContext() {
-      if (bgAudioCtx) {
-        if (bgAudioCtx.state === 'suspended') {
-          bgAudioCtx.resume();
+      if (!bgAudioCtx) {
+        try {
+          bgAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          bgAudioDest = bgAudioCtx.createMediaStreamDestination();
+          masterGainNode = bgAudioCtx.createGain();
+          masterGainNode.gain.value = 1.0;
+          
+          masterGainNode.connect(bgAudioCtx.destination);
+          masterGainNode.connect(bgAudioDest);
+
+          bgAudioSource1 = bgAudioCtx.createMediaElementSource(bgAudio1);
+          bgAudioSource1.connect(masterGainNode);
+
+          bgAudioSource2 = bgAudioCtx.createMediaElementSource(bgAudio2);
+          bgAudioSource2.connect(masterGainNode);
+        } catch (e) {
+          console.error("Web Audio Context initialization failed:", e);
         }
-        return;
       }
-      try {
-        bgAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        bgAudioSource = bgAudioCtx.createMediaElementSource(bgAudio);
-        bgAudioDest = bgAudioCtx.createMediaStreamDestination();
-        
-        // Connect to local speakers and recording destination
-        bgAudioSource.connect(bgAudioCtx.destination);
-        bgAudioSource.connect(bgAudioDest);
-        
-        if (bgAudioCtx.state === 'suspended') {
-          bgAudioCtx.resume();
-        }
-      } catch (e) {
-        console.error("Web Audio Context initialization failed:", e);
+      if (bgAudioCtx && bgAudioCtx.state === 'suspended') {
+        bgAudioCtx.resume();
       }
     }
 
@@ -422,50 +477,148 @@
     function handleMusicSelection() {
       const selected = musicSelect.value;
       if (selected === 'none') {
-        removeMusic();
-      } else if (selected === 'custom') {
+        removeAllMusic();
+      } else if (selected === 'upload' || selected === 'replace') {
+        isAddingSecondTrack = false;
+        audioLoader.value = "";
+        audioLoader.click();
+      } else if (selected === 'add-more') {
+        isAddingSecondTrack = true;
+        audioLoader.value = "";
         audioLoader.click();
       }
     }
 
-    // Custom local audio file upload handler
+    // Custom local audio files upload handler
     function handleCustomAudioUpload(event) {
-      const file = event.target.files[0];
-      if (!file) {
-        musicSelect.value = isMusicLoaded ? 'custom' : 'none';
+      const files = Array.from(event.target.files);
+      if (files.length === 0) {
+        updateMusicUI();
         return;
       }
 
-      isMusicLoaded = false;
-      musicStatusContainer.classList.remove('hidden');
-      musicStatusContainer.classList.add('flex');
-      musicStatusText.innerText = "📂 Loading file...";
-      musicStatusText.title = file.name;
+      if (isAddingSecondTrack) {
+        // Append 1 track to existing track 1
+        if (files[0] && musicTracks.length < 2) {
+          const url = URL.createObjectURL(files[0]);
+          musicTracks.push({ file: files[0], url: url, name: files[0].name });
+        }
+      } else {
+        // Replace current tracks with up to 2 selected files
+        musicTracks.forEach(t => URL.revokeObjectURL(t.url));
+        musicTracks = [];
+        const filesToAdd = files.slice(0, 2);
+        filesToAdd.forEach(file => {
+          const url = URL.createObjectURL(file);
+          musicTracks.push({ file: file, url: url, name: file.name });
+        });
+      }
 
-      const url = URL.createObjectURL(file);
-      
-      // Crucial: remove crossorigin attribute for local files to avoid CORS blocks on blobs!
-      bgAudio.removeAttribute('crossorigin');
-      
-      bgAudio.src = url;
-      bgAudio.load();
-      isMusicLoaded = true;
-
-      musicStatusText.innerText = `🎵 ${file.name}`;
-      musicSelect.value = 'custom';
+      isAddingSecondTrack = false;
+      applyMusicTracks();
     }
 
-    // Remove uploaded background music
-    function removeMusic() {
-      bgAudio.pause();
-      isMusicLoaded = false;
-      bgAudio.src = "";
-      bgAudio.load();
-      audioLoader.value = "";
-      musicStatusContainer.classList.add('hidden');
-      musicStatusContainer.classList.remove('flex');
-      musicStatusText.innerText = "";
-      musicSelect.value = 'none';
+    function removeSingleTrack(index) {
+      if (index >= 0 && index < musicTracks.length) {
+        URL.revokeObjectURL(musicTracks[index].url);
+        musicTracks.splice(index, 1);
+        applyMusicTracks();
+      }
+    }
+
+    function removeAllMusic() {
+      bgAudio1.pause();
+      bgAudio2.pause();
+      musicTracks.forEach(t => URL.revokeObjectURL(t.url));
+      musicTracks = [];
+      applyMusicTracks();
+    }
+
+    function applyMusicTracks() {
+      bgAudio1.pause();
+      bgAudio2.pause();
+      bgAudio1.currentTime = 0;
+      bgAudio2.currentTime = 0;
+      currentTrackIndex = 0;
+
+      if (musicTracks.length === 0) {
+        bgAudio1.src = "";
+        bgAudio2.src = "";
+        bgAudio1.load();
+        bgAudio2.load();
+      } else if (musicTracks.length === 1) {
+        bgAudio1.removeAttribute('crossorigin');
+        bgAudio1.src = musicTracks[0].url;
+        bgAudio1.load();
+        bgAudio2.src = "";
+        bgAudio2.load();
+      } else if (musicTracks.length === 2) {
+        bgAudio1.removeAttribute('crossorigin');
+        bgAudio2.removeAttribute('crossorigin');
+        bgAudio1.src = musicTracks[0].url;
+        bgAudio1.load();
+        bgAudio2.src = musicTracks[1].url;
+        bgAudio2.load();
+      }
+
+      updateMusicUI();
+      updateStepValidation();
+    }
+
+    function updateMusicUI() {
+      if (musicTracks.length === 0) {
+        musicStatusContainer.classList.add('hidden');
+        musicStatusContainer.classList.remove('flex');
+        track1Item.classList.add('hidden');
+        track1Item.classList.remove('flex');
+        track2Item.classList.add('hidden');
+        track2Item.classList.remove('flex');
+        
+        musicSelect.innerHTML = `
+          <option value="none" selected>3. Music (No Music) 🎵</option>
+          <option value="upload">3. Music (Upload MP3...) 📂</option>
+        `;
+        musicSelect.value = 'none';
+      } else if (musicTracks.length === 1) {
+        musicStatusContainer.classList.remove('hidden');
+        musicStatusContainer.classList.add('flex');
+        
+        track1Item.classList.remove('hidden');
+        track1Item.classList.add('flex');
+        track1Name.innerText = musicTracks[0].name;
+        track1Name.title = musicTracks[0].name;
+
+        track2Item.classList.add('hidden');
+        track2Item.classList.remove('flex');
+
+        musicSelect.innerHTML = `
+          <option value="loaded-1" selected>3. Music (1 Track: Loop) 🎵</option>
+          <option value="add-more">➕ Add 2nd Music Track... 📂</option>
+          <option value="replace">📂 Replace Music Files...</option>
+          <option value="none">❌ Remove All Music</option>
+        `;
+        musicSelect.value = 'loaded-1';
+      } else if (musicTracks.length >= 2) {
+        musicStatusContainer.classList.remove('hidden');
+        musicStatusContainer.classList.add('flex');
+        
+        track1Item.classList.remove('hidden');
+        track1Item.classList.add('flex');
+        track1Name.innerText = musicTracks[0].name;
+        track1Name.title = musicTracks[0].name;
+
+        track2Item.classList.remove('hidden');
+        track2Item.classList.add('flex');
+        track2Name.innerText = musicTracks[1].name;
+        track2Name.title = musicTracks[1].name;
+
+        musicSelect.innerHTML = `
+          <option value="loaded-2" selected>3. Music (2 Tracks: Loop 1⇄2) 🎵</option>
+          <option value="replace">📂 Replace Music Files...</option>
+          <option value="none">❌ Remove All Music</option>
+        `;
+        musicSelect.value = 'loaded-2';
+      }
     }
 
     // File selection event handler
@@ -577,7 +730,9 @@
           // Play from beginning
           slideshowTime = 0;
           lastTimestamp = 0;
-          bgAudio.currentTime = 0;
+          bgAudio1.currentTime = 0;
+          bgAudio2.currentTime = 0;
+          currentTrackIndex = 0;
           startSlideshow();
         }
       }
@@ -632,7 +787,7 @@
         let combinedStream = canvasStream;
 
         // Mix background audio into the recording stream if active
-        if (isMusicLoaded && bgAudioDest) {
+        if (musicTracks.length > 0 && bgAudioDest) {
           const audioTrack = bgAudioDest.stream.getAudioTracks()[0];
           if (audioTrack) {
             combinedStream = new MediaStream([videoTrack, audioTrack]);
@@ -721,8 +876,12 @@
       btnPlayPause.classList.remove('opacity-40');
       btnPlayPause.classList.add('opacity-100');
 
-      if (isMusicLoaded) {
-        bgAudio.play().catch(e => console.warn("Audio play blocked by browser:", e));
+      if (musicTracks.length > 0) {
+        if (currentTrackIndex === 0) {
+          bgAudio1.play().catch(e => console.warn("Audio 1 play blocked by browser:", e));
+        } else {
+          bgAudio2.play().catch(e => console.warn("Audio 2 play blocked by browser:", e));
+        }
       }
 
       if (!animationFrameId) {
@@ -741,9 +900,8 @@
       
       updateStepValidation();
 
-      if (isMusicLoaded) {
-        bgAudio.pause();
-      }
+      bgAudio1.pause();
+      bgAudio2.pause();
 
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.pause();
@@ -774,13 +932,14 @@
       loadedImages = [];
 
       // Reset audio states
-      isMusicLoaded = false;
-      musicStatusContainer.classList.add('hidden');
-      musicStatusContainer.classList.remove('flex');
-      musicStatusText.innerText = "";
-      musicSelect.value = 'none';
-      bgAudio.src = "";
-      bgAudio.load();
+      bgAudio1.pause();
+      bgAudio2.pause();
+      bgAudio1.currentTime = 0;
+      bgAudio2.currentTime = 0;
+      currentTrackIndex = 0;
+      if (masterGainNode) masterGainNode.gain.value = 1.0;
+      bgAudio1.volume = 1.0;
+      bgAudio2.volume = 1.0;
 
       // Revoke and clear recorded video states
       recordedVideoBlob = null;
@@ -821,12 +980,6 @@
 
       updateNameLabelVisibility();
       updateStepValidation();
-
-      if (bgAudio) {
-        bgAudio.pause();
-        bgAudio.currentTime = 0;
-        bgAudio.volume = 1.0;
-      }
     }
 
     function updateStepValidation() {
@@ -926,12 +1079,17 @@
       const totalDuration = N * FRAME_DURATION + END_SLIDE_DURATION;
 
       // Handle music fade-out in the last 2 seconds of the end screen
-      if (isPlaying && isMusicLoaded) {
+      if (isPlaying && musicTracks.length > 0) {
         const timeLeft = totalDuration - slideshowTime;
         if (timeLeft <= 2000) {
-          bgAudio.volume = Math.max(0, timeLeft / 2000);
+          const vol = Math.max(0, timeLeft / 2000);
+          if (masterGainNode) masterGainNode.gain.value = vol;
+          bgAudio1.volume = vol;
+          bgAudio2.volume = vol;
         } else {
-          bgAudio.volume = 1.0;
+          if (masterGainNode) masterGainNode.gain.value = 1.0;
+          bgAudio1.volume = 1.0;
+          bgAudio2.volume = 1.0;
         }
       }
 
@@ -1138,16 +1296,21 @@
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 4;
 
-          // Header Text (Supports multi-line text split by newlines)
-          const titleFontSize = Math.floor(V_WIDTH * 0.05); // 72px for 1440 width
+          // Header Text (Supports multi-line text split by newlines up to 3 lines)
+          const lines = locationName.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+          
+          let titleFontSize = Math.floor(V_WIDTH * 0.05); // Default 72px for 1440 width
+          if (lines.length >= 3) {
+            titleFontSize = Math.floor(V_WIDTH * 0.042); // ~60px for 1440 width, elegant 3-line layout
+          }
+
           ctx.fillStyle = '#ffffff';
           ctx.font = `bold ${titleFontSize}px sans-serif`;
           if ('letterSpacing' in ctx) {
-            ctx.letterSpacing = `${Math.floor(titleFontSize * 0.11)}px`; // 8px for 72px font
+            ctx.letterSpacing = `${Math.floor(titleFontSize * 0.11)}px`; // Letter-spacing
           }
           
-          const lines = locationName.split('\n').map(line => line.trim());
-          const lineHeight = titleFontSize * 1.25;
+          const lineHeight = titleFontSize * 1.28;
           const startY = V_HEIGHT / 2 - ((lines.length - 1) * lineHeight) / 2;
           
           lines.forEach((lineText, lineIdx) => {
