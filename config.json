@@ -1,0 +1,9 @@
+{
+  "maxMusicTracks": 4,
+  "allowMp4InPictures": true,
+  "cachePreviousProductions": false,
+  "autoPurgeProductionCache": true,
+  "clearCacheOnStart": true,
+  "clearCacheOnExportComplete": true,
+  "clearCacheOnReset": true
+}
